@@ -63,12 +63,11 @@ function update_reflect(x::T, step::T, x_min::T, x_max::T) where {T<:Real}
 end
 
 
-function update_cone!(cone::Cone, pars::Pars, s, h_s, w_s)
+function update_cone!(cone::Cone, pars::Pars, s::Real, h_s::Real, w_s::Real)
 
-    step_x = -0.5 .+ rand(pars.d)
-    step_x .*= (s/norm(step_x))
-    step_h = h_s*randn()
-    step_w = w_s*randn()
+    step_x = s*pars.step_x_generator()
+    step_h = h_s*pars.step_h_generator()
+    step_w = w_s*pars.step_w_generator()
 
     update_reflect!(cone.center, step_x, pars.x_min, pars.x_max)
     cone.height = update_reflect(cone.height, step_h, pars.h_min, pars.h_max)

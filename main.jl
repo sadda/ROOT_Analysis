@@ -12,17 +12,18 @@ T = 100
 d = 5
 m = 20
 
-s_min = 0.5
-s_max = 3.
-h_init  = 50.
-w_init  = 6.
-h_s_min = 1.
-h_s_max = 15.
-w_s_min = 0.1
-w_s_max = 1.5
+s_min     = 0.5
+s_max     = 3.
+h_init    = 50.
+w_init    = 6.
+h_s_min   = 1.
+h_s_max   = 15.
+w_s_min   = 0.1
+w_s_max   = 1.5
+generator = "Normal"
 
-pars_fixed = Pars(d, m, -50., 50., 30., 70., 1., 12., h_init, w_init, s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max)
-pars_uni   = Pars(d, m, -50., 50., 30., 70., 1., 12., "uniform", "uniform", 1., 1., h_s_min, h_s_max, w_s_min, w_s_max)
+pars_fixed = Pars(d, m, -50., 50., 30., 70., 1., 12., h_init, w_init, s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max, generator)
+pars_uni   = Pars(d, m, -50., 50., 30., 70., 1., 12., "uniform", "uniform", 1., 1., h_s_min, h_s_max, w_s_min, w_s_max, generator)
 models     = [TMO(); Rob1(n_eval); Yazdani1(); Yazdani2(); Yazdani3()]
 
 n_try = 1000
