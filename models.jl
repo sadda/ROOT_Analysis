@@ -23,12 +23,29 @@ end
 ################
 
 
-struct Rob1 <: Models
+struct Robust1 <: Models end
+
+
+function find_x(model::Robust1, cones::AbstractVector{Cone}, pars::Pars, δ::Real)
+
+    ~, i_max = findmax((height(cones)-δ)./abs.(width(cones)))
+    x = cones[i_max].center
+
+    return deepcopy(x)
+end
+
+
+################
+# RoA 1
+################
+
+
+struct RoA1 <: Models
 
     n_eval::Int  # First round of evaluation
     n_sel::Int   # Number of points for improvement in the second round
 
-    function Rob1(n::Int)
+    function RoA1(n::Int)
 
         n_eval = round(n*0.8)
         n_sel  = 5
@@ -37,10 +54,10 @@ struct Rob1 <: Models
 end
 
 
-update_x(model::Rob1, cones::AbstractVector{Cone}, x) = cones[cones_max_i(x, cones)].center
+update_x(model::RoA1, cones::AbstractVector{Cone}, x) = cones[cones_max_i(x, cones)].center
 
 
-function find_x(model::Rob1, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::RoA1, cones::AbstractVector{Cone}, pars::Pars)
 
     x_try = random_points(model.n_eval, pars)
     f_try = cones_value(x_try, cones)
@@ -68,8 +85,8 @@ struct Yazdani1 <: Models end
 
 function find_x(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars)
 
-    ~, i_min = findmin(pars.s)
-    x        = cones[i_min].center
+    ~, i_max = findmax(height(cones) .- sqrt(2/pi)*pars.h_s)
+    x        = cones[i_max].center
 
     return deepcopy(x)
 end
@@ -85,7 +102,7 @@ struct Yazdani2 <: Models end
 
 function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars)
 
-    ~, i_min = findmin(pars.h_s)
+    ~, i_min = findmin(pars.s)
     x        = cones[i_min].center
 
     return deepcopy(x)
@@ -100,11 +117,45 @@ end
 struct Yazdani3 <: Models end
 
 
-function find_x(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars)
 
-    aux      = pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s)
-    ~, i_min = findmin(aux)
+    ~, i_min = findmin(pars.h_s)
     x        = cones[i_min].center
+
+    return deepcopy(x)
+end
+
+
+################
+# Yazdani 4
+################
+
+
+struct Yazdani4 <: Models end
+
+
+function find_x(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars)
+
+    ~, i_min = findmin(pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s))
+    x        = cones[i_min].center
+
+    return deepcopy(x)
+end
+
+
+################
+# Yazdani 5
+################
+
+
+struct Yazdani5 <: Models end
+
+
+function find_x(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars, δ::Real)
+
+    ii       = pars.h_s >= δ
+    ~, i_min = findmin(pars.h_s[ii]/maximum(pars.h_s[ii]) .+ pars.s[ii]/maximum(pars.s[ii]))
+    x        = cones[ii[i_min]].center
 
     return deepcopy(x)
 end

@@ -30,7 +30,7 @@ generator = "Normal"
 
 pars_fixed = Pars(d, m, x_min, x_max, h_min, h_max, w_min, w_max, h_init, w_init, s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max, generator)
 pars_uni   = Pars(d, m, x_min, x_max, h_min, h_max, w_min, w_max, "uniform", "uniform", 1., 1., h_s_min, h_s_max, w_s_min, w_s_max, generator)
-models     = [TMO(); Rob1(n_eval); Yazdani1(); Yazdani2(); Yazdani3()]
+models     = [TMO(); Robust1(n_eval); RoA(); Yazdani1(); Yazdani2(); Yazdani3(); Yazdani4(); Yazdani5()]
 
 n_try = 1000
 #n_try = 10
