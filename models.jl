@@ -9,7 +9,7 @@ abstract type Models end
 struct TMO <: Models end
 
 
-function find_x(model::TMO, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::TMO, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     ~, i_max = findmax(height(cones))
     x = cones[i_max].center
@@ -26,9 +26,9 @@ end
 struct Robust1 <: Models end
 
 
-function find_x(model::Robust1, cones::AbstractVector{Cone}, pars::Pars, δ::Real)
+function find_x(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
 
-    ~, i_max = findmax((height(cones)-δ)./abs.(width(cones)))
+    ~, i_max = findmax((height(cones).-δ)./abs.(width(cones)))
     x = cones[i_max].center
 
     return deepcopy(x)
@@ -57,7 +57,7 @@ end
 update_x(model::RoA1, cones::AbstractVector{Cone}, x) = cones[cones_max_i(x, cones)].center
 
 
-function find_x(model::RoA1, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::RoA1, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     x_try = random_points(model.n_eval, pars)
     f_try = cones_value(x_try, cones)
@@ -83,7 +83,7 @@ end
 struct Yazdani1 <: Models end
 
 
-function find_x(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     ~, i_max = findmax(height(cones) .- sqrt(2/pi)*pars.h_s)
     x        = cones[i_max].center
@@ -100,7 +100,7 @@ end
 struct Yazdani2 <: Models end
 
 
-function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     ~, i_min = findmin(pars.s)
     x        = cones[i_min].center
@@ -117,7 +117,7 @@ end
 struct Yazdani3 <: Models end
 
 
-function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     ~, i_min = findmin(pars.h_s)
     x        = cones[i_min].center
@@ -134,7 +134,7 @@ end
 struct Yazdani4 <: Models end
 
 
-function find_x(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars)
+function find_x(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
     ~, i_min = findmin(pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s))
     x        = cones[i_min].center
@@ -151,11 +151,16 @@ end
 struct Yazdani5 <: Models end
 
 
-function find_x(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars, δ::Real)
+function find_x(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
 
-    ii       = pars.h_s >= δ
-    ~, i_min = findmin(pars.h_s[ii]/maximum(pars.h_s[ii]) .+ pars.s[ii]/maximum(pars.s[ii]))
-    x        = cones[ii[i_min]].center
+    ii       = findall(height(cones) .>= δ)
+    if length(ii) > 0
+        ~, i_min = findmin(pars.h_s[ii]./maximum(pars.h_s[ii]) .+ pars.s[ii]./maximum(pars.s[ii]))
+        x        = cones[ii[i_min]].center
+    else # All cones are too small
+        ~, i_max = findmax(height(cones) .- sqrt(2/pi)*pars.h_s)
+        x        = cones[i_max].center
+    end
 
     return deepcopy(x)
 end

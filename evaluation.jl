@@ -2,13 +2,13 @@ function compute_performance!(T_surv::Int, δ::Real, model::Models, cones::Abstr
 
     surv = zeros(T_surv)
 
-    x = find_x(model, cones, pars, δ)
+    x = find_x(model, cones, pars; δ=δ)
     for t in 1:T_surv
 
         update_cones!(cones, pars)
 
         if t==1 || cones_value(x, cones) < δ
-            x = find_x(model, cones, pars, δ)
+            x = find_x(model, cones, pars; δ=δ)
 
             surv[t] = 0
         else
