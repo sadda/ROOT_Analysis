@@ -1,6 +1,15 @@
 abstract type Models end
 
 
+function find_x(model::Models, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
+
+    scores   = scores(model, cones, pars; kwargs...)
+    ~, i_max = findmax(scores)
+
+    return deepcopy(cones[i_max].center)
+end
+
+
 ################
 # TMO
 ################
@@ -9,12 +18,35 @@ abstract type Models end
 struct TMO <: Models end
 
 
-function find_x(model::TMO, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
+scores(model::TMO, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones)
 
-    ~, i_max = findmax(height(cones))
-    x = cones[i_max].center
 
-    return deepcopy(x)
+################
+# Random
+################
+
+
+struct Random <: Models end
+
+
+scores(model::Random, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = rand(pars.m)
+
+
+################
+# Random above
+################
+
+
+struct RandomAbove <: Models end
+
+
+function scores(model::RandomAbove, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
+
+    s       = zeros(pars.m)
+    ii      = height(cones) .>= δ
+    s[ii]   = rand(sum(ii))
+    s[.!ii] = rand(sum(.!ii))
+    return s
 end
 
 
@@ -26,13 +58,7 @@ end
 struct Robust1 <: Models end
 
 
-function find_x(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
-
-    ~, i_max = findmax((height(cones).-δ)./abs.(width(cones)))
-    x = cones[i_max].center
-
-    return deepcopy(x)
-end
+scores(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./abs.(width(cones))
 
 
 ################
@@ -75,6 +101,15 @@ function find_x(model::RoA1, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 end
 
 
+function scores(model::RoA1, cones::AbstractVector{Cone}, pars::Pars; n=1000, kwargs...)
+
+    x      = random_points(n, pars)
+    i_cone = cones_max_i(x, cones)
+    s      = [sum(i_cone .== i) for i in 1:pars.m]
+    return s./sum(s)
+end
+
+
 ################
 # Yazdani 1
 ################
@@ -83,13 +118,7 @@ end
 struct Yazdani1 <: Models end
 
 
-function find_x(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
-
-    ~, i_max = findmax(height(cones) .- sqrt(2/pi)*pars.h_s)
-    x        = cones[i_max].center
-
-    return deepcopy(x)
-end
+scores(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones) .- sqrt(2/pi)*pars.h_s
 
 
 ################
@@ -100,13 +129,7 @@ end
 struct Yazdani2 <: Models end
 
 
-function find_x(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
-
-    ~, i_min = findmin(pars.s)
-    x        = cones[i_min].center
-
-    return deepcopy(x)
-end
+scores(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -pars.s
 
 
 ################
@@ -117,13 +140,7 @@ end
 struct Yazdani3 <: Models end
 
 
-function find_x(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
-
-    ~, i_min = findmin(pars.h_s)
-    x        = cones[i_min].center
-
-    return deepcopy(x)
-end
+scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -pars.h_s
 
 
 ################
@@ -134,13 +151,7 @@ end
 struct Yazdani4 <: Models end
 
 
-function find_x(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
-
-    ~, i_min = findmin(pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s))
-    x        = cones[i_min].center
-
-    return deepcopy(x)
-end
+scores(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -(pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s))
 
 
 ################
@@ -151,20 +162,14 @@ end
 struct Yazdani5 <: Models end
 
 
-function find_x(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
+function scores(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
 
-    ii       = findall(height(cones) .>= δ)
-    if length(ii) > 0
-        ~, i_min = findmin(pars.h_s[ii]./maximum(pars.h_s[ii]) .+ pars.s[ii]./maximum(pars.s[ii]))
-        x        = cones[ii[i_min]].center
-    else # All cones are too small
-        ~, i_max = findmax(height(cones) .- sqrt(2/pi)*pars.h_s)
-        x        = cones[i_max].center
-    end
-
-    return deepcopy(x)
+    s       = zeros(pars.m)
+    ii      = height(cones) .>= δ
+    s[ii]   = -(pars.h_s[ii]./maximum(pars.h_s[ii]) .+ pars.s[ii]./maximum(pars.s[ii]))
+    s[.!ii] = (height(cones)[.!ii] .- sqrt(2/pi)*pars.h_s[.!ii]) .- maximum(height(cones)) .- 2.
+    return s
 end
-
 
 ################
 # Utilities

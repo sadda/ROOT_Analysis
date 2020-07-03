@@ -60,8 +60,8 @@ end
 function compute_metrics!(x::AbstractMatrix, T_surv::Int, T_aver::Int, δ::Real, cones::AbstractVector{Cone}, pars::Pars)
 
     n      = size(x)[2]
-    f_surv = zeros(n)
     f_aver = zeros(n)
+    f_surv = zeros(n)
     ii     = trues(n)
 
     update_cones!(cones, pars) # Update cones to start from the next time instant
@@ -82,21 +82,4 @@ function compute_metrics!(x::AbstractMatrix, T_surv::Int, T_aver::Int, δ::Real,
         t > T_aver && sum(ii) == 0 && break
     end
     return f_surv, f_aver./T_aver
-end
-
-
-function compute_metrics(n_try::Int, x::AbstractMatrix, T_surv::Int, T_aver::Int, δ::Real, cones::AbstractVector{Cone}, pars::Pars)
-
-    f_all  = [compute_metrics!(x, T_surv, T_aver, δ, deepcopy(cones), pars) for i in 1:n_try]
-    f_surv = hcat([f_try[1] for f_try in f_all]...)
-    f_aver = hcat([f_try[2] for f_try in qwe]...)
-    return mean(f_surv, dims=2), mean(f_aver, dims=2)
-end
-
-
-function compute_region_attraction(n::Int, cones::AbstractVector{Cone}, pars::Pars)
-
-    x      = random_points(n, pars)
-    i_cone = cones_max_i(x, cones)
-    counts = [sum(i_cone .== i) for i in 1:pars.m]
 end
