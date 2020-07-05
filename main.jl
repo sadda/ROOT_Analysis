@@ -122,7 +122,7 @@ end
 
 round.(corrs_mean[:,1:2]; digits=2)
 
-
+table_to_tex(corrs_mean[:,1:2], "%1.1p")
 
 
 foijioef
