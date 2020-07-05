@@ -45,7 +45,7 @@ function scores(model::RandomAbove, cones::AbstractVector{Cone}, pars::Pars; δ:
     s       = zeros(pars.m)
     ii      = height(cones) .>= δ
     s[ii]   = rand(sum(ii))
-    s[.!ii] = rand(sum(.!ii))
+    s[.!ii] = -rand(sum(.!ii))
     return s
 end
 
