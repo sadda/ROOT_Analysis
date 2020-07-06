@@ -7,7 +7,7 @@ using Printf
 print_formatted(fmt, args...) = @eval @printf($fmt, $(args...))
 
 
-function table_to_tex(data, format; headerL=[], headerT=[], caption="", label="")
+function table_to_tex(data, format; header_l=[], header_t=[], caption="", label="")
 
     if ndims(data) == 1
         data_aux = repeat(data, 1, 1)
@@ -33,7 +33,7 @@ function table_to_tex(data, format; headerL=[], headerT=[], caption="", label=""
     @printf("\\caption{%s}\n", caption);
     @printf("\\label{%s}\n", label);
     @printf("\\centering\n");
-    if ~isempty(headerL)
+    if ~isempty(header_l)
         @printf("\\begin{tabular}{@{}l%s@{}}\n", repeat("l", n_col));
     else
         @printf("\\begin{tabular}{@{}%s@{}}\n", repeat("l", n_col));
@@ -41,18 +41,18 @@ function table_to_tex(data, format; headerL=[], headerT=[], caption="", label=""
     @printf("\\toprule\n");
 
     # Header
-    if !isempty(headerT)
-        if typeof(headerT) <: String
-            @printf("%s\n", headerT);
+    if !isempty(header_t)
+        if typeof(header_t) <: String
+            @printf("%s\n", header_t);
         else
-            if !isempty(headerL)
+            if !isempty(header_l)
                 @printf(" & ");
             end
-            for i in 1:length(headerT)
-                if typeof(headerT[i]) <: Number
-                    @printf("\$%f\$", headerT[i])
+            for i in 1:length(header_t)
+                if typeof(header_t[i]) <: Number
+                    @printf("\$%f\$", header_t[i])
                 else
-                    @printf("%s", headerT[i])
+                    @printf("%s", header_t[i])
                 end
                 if i < n_col
                     @printf(" & ");
@@ -64,11 +64,11 @@ function table_to_tex(data, format; headerL=[], headerT=[], caption="", label=""
 
     # Content
     for i=1:n_row
-        if !isempty(headerL)
+        if !isempty(header_l)
             try
-                @printf("%s", headerL[i]);
+                @printf("%s", header_l[i]);
             catch
-                @printf("\$%f\$", headerL[i]);
+                @printf("\$%f\$", header_l[i]);
             end
             @printf(" & ");
         end

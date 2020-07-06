@@ -1,4 +1,5 @@
 using Plots
+using KernelDensity
 
 
 function plot_contours(cones::AbstractVector{Cone}, pars::Pars; δ_x=0.25, min_value=-Inf, plot_boundary=false)
@@ -41,4 +42,15 @@ function add_peaks(p::AbstractPlot, cones::AbstractVector{Cone}, pars::Pars; kwa
 
     centers = center(cones)
     scatter!(p, centers[1,:], centers[2,:]; markershape=:cross, markercolor=:black, kwargs...)
+end
+
+
+function plot_repetition(x::AbstractArray; kwargs...)
+
+    dens = [kde(x[i]) for i in 1:length(x)]
+    p    = plot(dens[1].x, dens[1].density, kwargs...)
+    for i in 2:length(x)
+        plot!(dens[i].x, dens[i].density, kwargs...)
+    end
+    return p
 end
