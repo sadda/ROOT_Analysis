@@ -11,8 +11,8 @@ T_surv = 100
 T_aver = 4
 δ      = 40
 
-d = 2
-m = 20
+d = 5
+m = 10
 
 x_min     = -50.
 x_max     = 50.
@@ -22,8 +22,6 @@ w_min     = 1.
 w_max     = 12.
 s_min     = 0.5
 s_max     = 3.
-h_init    = 50.
-w_init    = 6.
 h_s_min   = 1.
 h_s_max   = 15.
 w_s_min   = 0.1
@@ -96,25 +94,34 @@ plot_repetition(surv_red)
 ## Print correlations in a Latex table
 
 
+header_metrics  = [R"$\Fsurv$", R"$\Faver$"]
+header_methods  = ["TMO", "Random", "RandomAbove", "Robust", "RoA", "Yazdani1", "Yazdani2", "Yazdani3", "Yazdani4", "Yazdani5"]
+header_notation = [R"$d$", R"$m$", R"$\delta$", R"$x_{\rm min}$", R"$x_{\rm max}$", R"$h_{\rm min}$", R"$h_{\rm max}$", R"$w_{\rm min}$", R"$w_{\rm max}$", R"$s_{\rm min}$", R"$s_{\rm max}$", R"$\sigma_{h,\rm min}$", R"$\sigma_{h,\rm max}$", R"$\sigma_{w,\rm min}$", R"$\sigma_{w,\rm max}$"]
+
+
 macro R_str(s)
     s
 end
 
-caption  = "Correlations between models (rows) and metrics (columns)."
+
+caption  = "Correlations between models and metrics"
 label    = "fig:corrs"
-header_t = [R"$\Fsurv$", R"$\Faver$"]
-header_l = ["TMO", "Random", "RandomAbove", "Robust", "RoA", "Yazdani1", "Yazdani2", "Yazdani3", "Yazdani4", "Yazdani5"]
 
-table_to_tex(corrs_mean[3:end,1:2], "%1.1p"; header_l=header_l, header_t=header_t, caption=caption, label=label)
+table_to_tex(corrs_mean[3:end,1:2], "%1.1p"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
 
 
+caption  = "Survival time and averaged objective metrics"
+label    = "fig:metrics"
+
+metrics_red = dropdims(mean(metrics, dims=3), dims=3)'
+table_to_tex(metrics_red, "%1.1f"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
 
 
+caption  = "Default hyperparameters"
+label    = "fig:pars"
 
-
-
-
-
+data_notation = [d, m, δ, x_min, x_max, h_min, h_max, w_min, w_max, s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max]
+table_to_tex(data_notation, "%1.1f"; header_l=header_notation, caption=caption, label=label, alignment=alignment_lr(ones(1)))
 
 
 

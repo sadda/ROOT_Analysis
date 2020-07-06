@@ -7,7 +7,7 @@ using Printf
 print_formatted(fmt, args...) = @eval @printf($fmt, $(args...))
 
 
-function table_to_tex(data, format; header_l=[], header_t=[], caption="", label="")
+function table_to_tex(data, format; header_l=[], header_t=[], caption="", label="", alignment=[])
 
     if ndims(data) == 1
         data_aux = repeat(data, 1, 1)
@@ -28,25 +28,28 @@ function table_to_tex(data, format; header_l=[], header_t=[], caption="", label=
     end
 
     #Beginning
-    @printf("\n\n");
-    @printf("\\begin{table}[!ht]\n");
-    @printf("\\caption{%s}\n", caption);
-    @printf("\\label{%s}\n", label);
-    @printf("\\centering\n");
-    if ~isempty(header_l)
-        @printf("\\begin{tabular}{@{}l%s@{}}\n", repeat("l", n_col));
-    else
-        @printf("\\begin{tabular}{@{}%s@{}}\n", repeat("l", n_col));
+    @printf("\n\n")
+    @printf("\\begin{table}[!ht]\n")
+    @printf("\\caption{%s}\n", caption)
+    @printf("\\label{%s}\n", label)
+    @printf("\\centering\n")
+    if isempty(alignment)
+        if isempty(header_l)
+            alignment = "@{}" * repeat("l", n_col) * "@{}"
+        else
+            alignment = "@{}" * repeat("l", n_col+1) * "@{}"
+        end
     end
-    @printf("\\toprule\n");
+    @printf("\\begin{tabular}{%s}\n", alignment)
+    @printf("\\toprule\n")
 
     # Header
     if !isempty(header_t)
         if typeof(header_t) <: String
-            @printf("%s\n", header_t);
+            @printf("%s\n", header_t)
         else
             if !isempty(header_l)
-                @printf(" & ");
+                @printf(" & ")
             end
             for i in 1:length(header_t)
                 if typeof(header_t[i]) <: Number
@@ -55,52 +58,55 @@ function table_to_tex(data, format; header_l=[], header_t=[], caption="", label=
                     @printf("%s", header_t[i])
                 end
                 if i < n_col
-                    @printf(" & ");
+                    @printf(" & ")
                 end
             end
         end
-        @printf(" \\\\\n\\midrule\n");
+        @printf(" \\\\\n\\midrule\n")
     end
 
     # Content
     for i=1:n_row
         if !isempty(header_l)
             try
-                @printf("%s", header_l[i]);
+                @printf("%s", header_l[i])
             catch
-                @printf("\$%f\$", header_l[i]);
+                @printf("\$%f\$", header_l[i])
             end
-            @printf(" & ");
+            @printf(" & ")
         end
 
         for j in 1:n_col
-            value       = data[i,j];
-            format_type = format_all[j];
+            value       = data[i,j]
+            format_type = format_all[j]
             if format_type[end] == 'e'
 
             elseif format_type[end] == 'p'
                 format_type = format_type[1:end-1] * 'f'
-                @printf("\$");
+                @printf("\$")
                 print_formatted(format_type, 100*value)
-                @printf("\\%s\$", "%");
+                @printf("\\%s\$", "%")
             elseif format_type[end] == 's'
 
             else
-                @printf("\$");
+                @printf("\$")
                 print_formatted(format_type, value)
-                @printf("\$");
+                @printf("\$")
             end
             if j < n_col
-                @printf(" & ");
+                @printf(" & ")
             else
-                @printf(" \\\\\n");
+                @printf(" \\\\\n")
             end
         end
     end
 
     # End
     @printf("\\bottomrule\n")
-    @printf("\\end{tabular}\n");
-    @printf("\\end{table}\n");
-    @printf("\n\n");
+    @printf("\\end{tabular}\n")
+    @printf("\\end{table}\n")
+    @printf("\n\n")
 end
+
+
+alignment_lr(x::AbstractArray) = "@{}l" * repeat('r', length(x)) * "@{}"
