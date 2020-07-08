@@ -58,27 +58,6 @@ for j in 1:n_model, k in 1:2
 end
 
 
-## Compute correlations
-
-
-bcorrs      = zeros(n_model, 2, n_try)
-bcorrs_mean = zeros(n_model, 2)
-@time for i in 1:n_model, j in 1:2
-    for k in 1:n_try
-        bcorrs[i,j,k] = cor(tiedrank(data[i+2,:,k], rev=true), tiedrank(data[j,:,k], rev=true))
-    end
-    bcorrs_mean[i,j] = mean(bcorrs[i,j,.!isnan.(bcorrs[i,j,:])])
-end
-
-
-
-
-acorrs      = zeros(n_model, 2, n_try)
-acorrs_mean = zeros(n_model, 2)
-@time for i in 1:n_model, j in 1:2
-    acorrs_mean[i,j] = mean(corrs[i,j,11,.!isnan.(corrs[i,j,11,:])])
-end
-
 ## Make plots
 
 
@@ -99,13 +78,14 @@ savefig(p5, "F_all.png")
 ## Plot histograms for different repetition numbers
 
 
-compute_rolling_mean(x, δ_n) = hcat([mean(x[:,n_beg+1:n_beg+δ_n], dims=2) for n_beg in 0:δ_n:(size(x)[2]-δ_n)]...)
+compute_rolling_mean(x, δ_n::Real) = [mean(x[n_beg+1:n_beg+δ_n]) for n_beg in 0:δ_n:(length(x)-δ_n)]
 
+compute_rolling_mean(x, δ_all::AbstractArray) = compute_rolling_mean.([x], δ_all)
 
 function compute_density(x::AbstractArray)
 
     n_x    = length(x)
-    dens   = [kde(x[i]) for i in 1:n_x]
+    dens   = [kde(x[i], npoints=256) for i in 1:n_x]
     f_min  = minimum([minimum(dens[i].x) for i in 1:n_x])
     f_max  = maximum([maximum(dens[i].x) for i in 1:n_x])
     x_step = (maximum(dens[1].x) - minimum(dens[1].x)) / length(dens[1].x)
@@ -119,13 +99,24 @@ function compute_density(x::AbstractArray)
 end
 
 
-n_method = 10
-δ_all    = [400 1000 4000]
-surv_red = [compute_rolling_mean(metrics[1,:,:], δ_n)[n_method,:] for δ_n in δ_all]
-dens     = compute_density(surv_red)
+n_methods = [4 10]
+δ_all     = [400 4000]
+surv_red  = hcat([compute_rolling_mean(metrics[1,n_method,:], δ_all) for n_method in n_methods]...)
+dens      = compute_density(surv_red)
 
 p6 = plot_repetition(dens)
 savefig(p6, "Hist.png")
+
+
+generate_random_indices(i::Int, i_max::Int) = convert.(Int, ceil.(i_max*rand(i)))
+
+get_probability(x, y) = (sum(x .> y) + 0.5*sum(x .== y)) / length(x)
+
+
+n_surv_rand = 100000
+surv_random = hcat([surv_red[i][generate_random_indices(n_surv_rand,length(surv_red[i]))] for i in 1:length(surv_red)]...)
+prob1       = get_probability(surv_random[:,3], surv_random[:,1])
+prob2       = get_probability(surv_random[:,4], surv_random[:,2])
 
 
 ## Plot region at attraction
