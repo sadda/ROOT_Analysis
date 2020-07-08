@@ -58,7 +58,7 @@ end
 struct Robust1 <: Models end
 
 
-scores(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./abs.(width(cones))
+scores(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./abs.(pars.s .* width(cones))
 
 
 ################
@@ -166,7 +166,7 @@ function scores(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Re
 
     s       = zeros(pars.m)
     ii      = height(cones) .>= δ
-    s[ii]   = -(pars.h_s[ii]./maximum(pars.h_s[ii]) .+ pars.s[ii]./maximum(pars.s[ii]))
+    s[ii]   = -(pars.h_s[ii]./maximum(pars.h_s) .+ pars.s[ii]./maximum(pars.s))
     s[.!ii] = (height(cones)[.!ii] .- sqrt(2/pi)*pars.h_s[.!ii]) .- maximum(height(cones)) .- 2.
     return s
 end

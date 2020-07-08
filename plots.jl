@@ -1,5 +1,4 @@
 using Plots
-using KernelDensity
 
 
 function plot_contours(cones::AbstractVector{Cone}, pars::Pars; δ_x=0.25, min_value=-Inf, plot_boundary=false)
@@ -17,7 +16,7 @@ function plot_contours(cones::AbstractVector{Cone}, pars::Pars; δ_x=0.25, min_v
     Y = repeat(y, 1, n_x)
     Z = map(f, X, Y)
 
-    p = contour(x, y, Z, levels = 20, c=:jet)
+    p = contour(x, y, Z, levels = 20, c=:jet, dpi=600)
 
     if plot_boundary
 
@@ -31,9 +30,8 @@ function plot_contours(cones::AbstractVector{Cone}, pars::Pars; δ_x=0.25, min_v
                 KK[i,j] = true
             end
         end
-        scatter!(X[KK], Y[KK], markersize=3, markercolor=:black, legend=:none)
+        scatter!(X[KK], Y[KK], markersize=1, markercolor=:black, legend=:none)
     end
-
     return p
 end
 
@@ -47,10 +45,9 @@ end
 
 function plot_repetition(x::AbstractArray; kwargs...)
 
-    dens = [kde(x[i]) for i in 1:length(x)]
-    p    = plot(dens[1].x, dens[1].density, kwargs...)
+    p    = plot(x[1][:,1], x[1][:,2], kwargs...)
     for i in 2:length(x)
-        plot!(dens[i].x, dens[i].density, kwargs...)
+        plot!(x[i][:,1], x[i][:,2], kwargs...)
     end
     return p
 end

@@ -33,7 +33,7 @@ function init_cones(pars::Pars)
     heights = pars.h_init_min .+ (pars.h_init_max-pars.h_init_min).*rand(pars.m)
     widths  = pars.w_init_min .+ (pars.w_init_max-pars.w_init_min).*rand(pars.m)
 
-    a = [Cone(centers[:,k], heights[k], widths[k]) for k in 1:m]
+    a = [Cone(centers[:,k], heights[k], widths[k]) for k in 1:pars.m]
 end
 
 
