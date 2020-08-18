@@ -1,7 +1,7 @@
 random_points(n::Int, pars::Pars) = pars.x_min .+ (pars.x_max .- pars.x_min).*rand(pars.d, n)
 
 
-get_file_name(δ, m) = "Results/Results_delta=" * string(δ) * "_m=" * string(m) * ".bson"
+get_file_name(δ, m) = "Results2/Results_delta=" * string(δ) * "_m=" * string(m) * ".bson"
 
 
 using Printf

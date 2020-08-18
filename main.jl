@@ -33,7 +33,7 @@ w_s_min   = 0.1
 w_s_max   = 1.5
 generator = "Normal"
 
-models   = [TMO(); Random(); RandomAbove(); Robust1(); RoA1(2500); Yazdani1(); Yazdani2(); Yazdani3(); Yazdani4(); Yazdani5()]
+models   = [RoA1(2500); TMO(); Robust1(); Robust2(); Yazdani1(); Yazdani2(); Yazdani3(); Yazdani4(); Yazdani5(); RandomAbove(); Random()]
 n_models = length(models)
 n_data   = n_models+2
 

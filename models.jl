@@ -1,3 +1,5 @@
+using Distributions
+
 abstract type Models end
 
 
@@ -8,6 +10,12 @@ function find_x(model::Models, cones::AbstractVector{Cone}, pars::Pars; kwargs..
 
     return deepcopy(cones[i_max].center)
 end
+
+
+mean_folded_normal(μ::Real, σ_sq::Real) = sqrt(2*σ_sq/pi)*exp(-μ^2/(2*σ_sq)) + μ*(1-2*cdf(Normal(0,1), -μ/(sqrt(σ_sq))))
+
+
+height_variance(cones, pars) = mean_folded_normal.(pars.s.*width(cones), pars.h_s.^2 .+ pars.s.^2 .* pars.w_s)
 
 
 ################
@@ -59,6 +67,17 @@ struct Robust1 <: Models end
 
 
 scores(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./abs.(pars.s .* width(cones))
+
+
+################
+# Robust 2
+################
+
+
+struct Robust2 <: Models end
+
+
+scores(model::Robust2, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./height_variance(cones, pars)
 
 
 ################
@@ -118,7 +137,7 @@ end
 struct Yazdani1 <: Models end
 
 
-scores(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones) .- sqrt(2/pi)*pars.h_s
+scores(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones) .- height_variance(cones, pars)
 
 
 ################
@@ -140,7 +159,7 @@ scores(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -p
 struct Yazdani3 <: Models end
 
 
-scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -pars.h_s
+scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = .-height_variance(cones, pars)
 
 
 ################
@@ -151,8 +170,11 @@ scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -p
 struct Yazdani4 <: Models end
 
 
-scores(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -(pars.h_s/maximum(pars.h_s) .+ pars.s/maximum(pars.s))
+function scores(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
 
+    hv = height_variance(cones, pars)
+    return -(hv/maximum(hv) .+ pars.s/maximum(pars.s))
+end
 
 ################
 # Yazdani 5
@@ -166,8 +188,9 @@ function scores(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Re
 
     s       = zeros(pars.m)
     ii      = height(cones) .>= δ
-    s[ii]   = -(pars.h_s[ii]./maximum(pars.h_s) .+ pars.s[ii]./maximum(pars.s))
-    s[.!ii] = (height(cones)[.!ii] .- sqrt(2/pi)*pars.h_s[.!ii]) .- maximum(height(cones)) .- 2.
+    hv      = height_variance(cones, pars)
+    s[ii]   = -(hv[ii]./maximum(hv) .+ pars.s[ii]./maximum(pars.s))
+    s[.!ii] = hv[.!ii] .- maximum(height(cones)) .- 2.
     return s
 end
 

@@ -20,9 +20,9 @@ m = 10
 pars_all = collect(20:2:50)
 
 header_metrics  = [R"$\Fsurv$", R"$\Faver$"]
-header_methods  = ["TMO" "Random" "RandomAbove" "Robust" "RoA" "Yazdani1" "Yazdani2" "Yazdani3" "Yazdani4" "Yazdani5"]
+header_methods  = ["RoA" "TMO" "Robust1" "Robust2" "Yazdani1" "Yazdani2" "Yazdani3" "Yazdani4" "Yazdani5" "RandomAbove" "Random"]
 header_notation = [R"$d$", R"$m$", R"$\delta$", R"$x_{\rm min}$", R"$x_{\rm max}$", R"$h_{\rm min}$", R"$h_{\rm max}$", R"$w_{\rm min}$", R"$w_{\rm max}$", R"$s_{\rm min}$", R"$s_{\rm max}$", R"$\sigma_{h,\rm min}$", R"$\sigma_{h,\rm max}$", R"$\sigma_{w,\rm min}$", R"$\sigma_{w,\rm max}$"]
-ii_red          = [1, 4, 5, 6, 7, 10]
+ii_red          = [1, 2, 3, 4, 5, 9]
 
 
 ## Prepare data
@@ -99,9 +99,9 @@ function compute_density(x::AbstractArray)
 end
 
 
-n_methods = [4 10]
+n_methods = [4 5]
 δ_all     = [400 4000]
-surv_red  = hcat([compute_rolling_mean(metrics[1,n_method,:], δ_all) for n_method in n_methods]...)
+surv_red  = hcat([compute_rolling_mean(metrics[2,n_method,:], δ_all) for n_method in n_methods]...)
 dens      = compute_density(surv_red)
 
 p6 = plot_repetition(dens)
@@ -159,18 +159,8 @@ label    = "table:corrs"
 table_to_tex(corrs_mean, "%1.1p"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
 
 
-"""
-caption  = "Survival time and averaged objective metrics"
-label    = "table:metrics"
-
-metrics_red = dropdims(mean(metrics, dims=3), dims=3)'
-table_to_tex(metrics_red, "%1.1f"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
-"""
-
-
 caption  = "Default hyperparameters"
 label    = "table:pars"
-
 
 s_min     = 0.5
 s_max     = 3.
