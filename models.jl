@@ -15,7 +15,8 @@ end
 mean_folded_normal(μ::Real, σ_sq::Real) = sqrt(2*σ_sq/pi)*exp(-μ^2/(2*σ_sq)) + μ*(1-2*cdf(Normal(0,1), -μ/(sqrt(σ_sq))))
 
 
-height_variance(cones, pars) = mean_folded_normal.(pars.s.*width(cones), pars.h_s.^2 .+ pars.s.^2 .* pars.w_s)
+function_variance(cones, pars) = mean_folded_normal.(pars.s.*width(cones), pars.h_s.^2 .+ pars.s.^2 .* pars.w_s)
+height_variance(cones, pars)   = mean_folded_normal.(0, pars.h_s.^2)
 
 
 ################
