@@ -1,7 +1,10 @@
 random_points(n::Int, pars::Pars) = pars.x_min .+ (pars.x_max .- pars.x_min).*rand(pars.d, n)
 
 
-get_file_name(δ, m) = "Results2/Results_delta=" * string(δ) * "_m=" * string(m) * ".bson"
+get_file_name(folder_name, δ, m) = joinpath(folder_name, "Results_delta=" * string(δ) * "_m=" * string(m) * ".bson")
+
+
+create_directory(folder_name) = !isdir(folder_name) && mkdir(folder_name)
 
 
 using Printf

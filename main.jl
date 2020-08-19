@@ -8,6 +8,8 @@ include("evaluation.jl")
 include("utilities.jl")
 include("plots.jl")
 
+folder_name = "Results_Final"
+
 δ_all  = collect(20:2:50)
 n_try  = 100000
 n_δ    = length(δ_all)
@@ -33,11 +35,12 @@ w_s_min   = 0.1
 w_s_max   = 1.5
 generator = "Normal"
 
-models   = [RoA1(2500); TMO(); Robust1(); Robust2(); Yazdani1(); Yazdani2(); Yazdani3(); Yazdani4(); Yazdani5(); RandomAbove(); Random()]
+models   = [RoA1(2500); TMO(); Robust1(); Robust2(); Yazdani1(); Yazdani2(); Yazdani3(); Yazdani4(); RandomAbove(); Random()]
 n_models = length(models)
 n_data   = n_models+2
 
 pars = Pars(d, m, x_min, x_max, h_min, h_max, w_min, w_max, "uniform", "uniform", s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max, generator)
+create_directory(folder_name)
 for (i_δ, δ) in enumerate(δ_all)
 
     @printf("Running experiment %3d out of %d\n", i_δ, n_δ)
@@ -61,6 +64,6 @@ for (i_δ, δ) in enumerate(δ_all)
     end
 
     pars      = Pars(d, m, x_min, x_max, h_min, h_max, w_min, w_max, "uniform", "uniform", s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max, generator)
-    file_name = get_file_name(δ, m)
+    file_name = get_file_name(folder_name, δ, m)
     @save file_name data metrics pars models T_surv T_aver
 end

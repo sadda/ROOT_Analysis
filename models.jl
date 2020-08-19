@@ -78,7 +78,7 @@ scores(model::Robust1, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs
 struct Robust2 <: Models end
 
 
-scores(model::Robust2, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./height_variance(cones, pars)
+scores(model::Robust2, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...) = (height(cones).-δ)./function_variance(cones, pars)
 
 
 ################
@@ -138,7 +138,7 @@ end
 struct Yazdani1 <: Models end
 
 
-scores(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones) .- height_variance(cones, pars)
+scores(model::Yazdani1, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = height(cones) .- function_variance(cones, pars)
 
 
 ################
@@ -160,8 +160,14 @@ scores(model::Yazdani2, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = -p
 struct Yazdani3 <: Models end
 
 
-scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = .-height_variance(cones, pars)
+function scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
 
+    ii      = height(cones) .>= δ
+    hv      = height_variance(cones, pars)
+    s       = -hv
+    s[.!ii] .-= (maximum(s) - minimum(s) + 1.)
+    return s
+end
 
 ################
 # Yazdani 4
@@ -171,27 +177,12 @@ scores(model::Yazdani3, cones::AbstractVector{Cone}, pars::Pars; kwargs...) = .-
 struct Yazdani4 <: Models end
 
 
-function scores(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; kwargs...)
+function scores(model::Yazdani4, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
 
-    hv = height_variance(cones, pars)
-    return -(hv/maximum(hv) .+ pars.s/maximum(pars.s))
-end
-
-################
-# Yazdani 5
-################
-
-
-struct Yazdani5 <: Models end
-
-
-function scores(model::Yazdani5, cones::AbstractVector{Cone}, pars::Pars; δ::Real, kwargs...)
-
-    s       = zeros(pars.m)
     ii      = height(cones) .>= δ
     hv      = height_variance(cones, pars)
-    s[ii]   = -(hv[ii]./maximum(hv) .+ pars.s[ii]./maximum(pars.s))
-    s[.!ii] = hv[.!ii] .- maximum(height(cones)) .- 2.
+    s       = -(hv./maximum(hv) .+ pars.s./maximum(pars.s))
+    s[.!ii] .-= (maximum(s) - minimum(s) + 1.) 
     return s
 end
 

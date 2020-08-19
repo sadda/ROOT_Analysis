@@ -15,20 +15,19 @@ macro R_str(s)
     s
 end
 
+folder_name = "Results_Final"
+
 δ = 40
 m = 10
 pars_all = collect(20:2:50)
 
 header_metrics  = [R"$\Fsurv$", R"$\Faver$"]
-header_methods  = ["RoA" "TMO" "Robust1" "Robust2" "Yazdani1" "Yazdani2" "Yazdani3" "Yazdani4" "Yazdani5" "RandomAbove" "Random"]
+header_methods  = ["RoA" "TMO" "Robust1" "Robust2" "Yazdani1" "Yazdani2" "Yazdani3" "Yazdani4" "RandomAbove" "Random"]
 header_notation = [R"$d$", R"$m$", R"$\delta$", R"$x_{\rm min}$", R"$x_{\rm max}$", R"$h_{\rm min}$", R"$h_{\rm max}$", R"$w_{\rm min}$", R"$w_{\rm max}$", R"$s_{\rm min}$", R"$s_{\rm max}$", R"$\sigma_{h,\rm min}$", R"$\sigma_{h,\rm max}$", R"$\sigma_{w,\rm min}$", R"$\sigma_{w,\rm max}$"]
-ii_red          = [1, 2, 3, 4, 5, 9]
+ii_red          = [1, 2, 3, 4, 5, 8]
 
-
-## Prepare data
-
-
-@load get_file_name(δ, m) data metrics pars models T_surv T_aver
+### Prepare data
+@load get_file_name(folder_name, δ, m) data metrics pars models T_surv T_aver
 
 n_pars  = length(pars_all)
 n_model = size(metrics)[2]
@@ -39,7 +38,7 @@ corrs   = zeros(n_model, 2, n_pars, n_try)
 for (i, δ) in enumerate(pars_all)
 
     @printf("Computing correlations %3d out of %3d\n", i, n_pars)
-    @load get_file_name(δ, m) data metrics pars models T_surv T_aver
+    @load get_file_name(folder_name, δ, m) data metrics pars models T_surv T_aver
 
     f_surv[:,i] = dropdims(mean(metrics, dims=3), dims=3)[1,:]
     f_aver[:,i] = dropdims(mean(metrics, dims=3), dims=3)[2,:]
@@ -58,9 +57,7 @@ for j in 1:n_model, k in 1:2
 end
 
 
-## Make plots
-
-
+### Make plots
 p1 = plot(pars_all, f_surv[ii_red,:]', label=header_methods[ii_red'])
 
 surv_rank_red = hcat([tiedrank(f_surv[ii_red,k], rev=true) for k in 1:n_pars]...)
@@ -72,12 +69,10 @@ aver_rank_red = hcat([tiedrank(f_aver[ii_red,k], rev=true) for k in 1:n_pars]...
 p4 = plot(pars_all, aver_rank_red', legend=:none)
 
 p5 = plot(p1, p2, p3, p4)
-savefig(p5, "F_all.png")
+savefig(p5, joinpath(folder_name, "F_all.png"))
 
 
-## Plot histograms for different repetition numbers
-
-
+### Plot histograms for different repetition numbers
 compute_rolling_mean(x, δ_n::Real) = [mean(x[n_beg+1:n_beg+δ_n]) for n_beg in 0:δ_n:(length(x)-δ_n)]
 
 compute_rolling_mean(x, δ_all::AbstractArray) = compute_rolling_mean.([x], δ_all)
@@ -105,7 +100,7 @@ surv_red  = hcat([compute_rolling_mean(metrics[2,n_method,:], δ_all) for n_meth
 dens      = compute_density(surv_red)
 
 p6 = plot_repetition(dens)
-savefig(p6, "Hist.png")
+savefig(p6, joinpath(folder_name, "Hist.png"))
 
 
 generate_random_indices(i::Int, i_max::Int) = convert.(Int, ceil.(i_max*rand(i)))
@@ -119,9 +114,7 @@ prob1       = get_probability(surv_random[:,3], surv_random[:,1])
 prob2       = get_probability(surv_random[:,4], surv_random[:,2])
 
 
-## Plot region at attraction
-
-
+### Plot region at attraction
 d = 2
 m = 3
 pars_mod = Pars(d, m, pars.x_min[1], pars.x_max[1], pars.h_min, pars.h_max, pars.w_min, pars.w_max, "uniform", "uniform", 1., 1., 1., 1., 1., 1., "Normal")
@@ -137,22 +130,18 @@ cones[3].height = 60
 cones[3].width  = 0.5*(pars.w_min+pars.w_max)
 
 p7 = plot_contours(cones, pars_mod; min_value=-Inf, plot_boundary=true)
-savefig(p7, "Contours.png")
+savefig(p7, joinpath(folder_name, "Contours.png"))
 
 
-## Save results to csv
+### Save results to csv
+writedlm(joinpath(folder_name, "surv1.csv"),  hcat(pars_all, f_surv[ii_red,:]'), ',')
+writedlm(joinpath(folder_name, "surv2.csv"),  hcat(pars_all, surv_rank_red'), ',')
+writedlm(joinpath(folder_name, "aver1.csv"),  hcat(pars_all, f_aver[ii_red,:]'), ',')
+writedlm(joinpath(folder_name, "aver2.csv"),  hcat(pars_all, aver_rank_red'), ',')
+writedlm(joinpath(folder_name, "hist.csv"),  hcat([dens[i] for i in 1:length(dens)]...), ',')
 
 
-writedlm("surv1.csv",  hcat(pars_all, f_surv[ii_red,:]'), ',')
-writedlm("surv2.csv",  hcat(pars_all, surv_rank_red'), ',')
-writedlm("aver1.csv",  hcat(pars_all, f_aver[ii_red,:]'), ',')
-writedlm("aver2.csv",  hcat(pars_all, aver_rank_red'), ',')
-writedlm("hist.csv",  hcat([dens[i] for i in 1:length(dens)]...), ',')
-
-
-## Print Latex tables
-
-
+### Print Latex tables
 caption  = "Correlations between models and metrics"
 label    = "table:corrs"
 
