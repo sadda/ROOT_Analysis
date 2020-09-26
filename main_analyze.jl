@@ -35,6 +35,7 @@ n_try   = size(metrics)[3]
 f_surv  = zeros(n_model, n_pars)
 f_aver  = zeros(n_model, n_pars)
 corrs   = zeros(n_model, 2, n_pars, n_try)
+success = zeros(n_model, 2, n_pars, n_try)
 for (i, δ) in enumerate(pars_all)
 
     @printf("Computing correlations %3d out of %3d\n", i, n_pars)
@@ -45,15 +46,22 @@ for (i, δ) in enumerate(pars_all)
 
     for j in 1:n_model, k in 1:2
         for l in 1:n_try
-            corrs[j,k,i,l] = cor(tiedrank(data[j+2,:,l], rev=true), tiedrank(data[k,:,l], rev=true))
+            corrs[j,k,i,l]   = cor(tiedrank(data[j+2,:,l], rev=true), tiedrank(data[k,:,l], rev=true))
+
+            ii               = findmax(data[j+2,:,l])[2]
+            success[j,k,i,l] = (data[k,ii,l] == maximum(data[k,:,l]))
         end
     end
 end
 
-corrs_mean = zeros(n_model, 2)
+corrs_mean   = zeros(n_model, 2)
+success_mean = zeros(n_model, 2)
 for j in 1:n_model, k in 1:2
-    corrs_aux       = reshape(corrs[j,k,:,:], n_pars*n_try, 1)
-    corrs_mean[j,k] = mean(corrs_aux[.!isnan.(corrs_aux)])
+    corrs_aux         = reshape(corrs[j,k,:,:], n_pars*n_try, 1)
+    corrs_mean[j,k]   = mean(corrs_aux[.!isnan.(corrs_aux)])
+
+    success_aux       = reshape(success[j,k,:,:], n_pars*n_try, 1)
+    success_mean[j,k] = mean(success_aux[.!isnan.(success_aux)])
 end
 
 
@@ -80,7 +88,8 @@ compute_rolling_mean(x, δ_all::AbstractArray) = compute_rolling_mean.([x], δ_a
 function compute_density(x::AbstractArray)
 
     n_x    = length(x)
-    dens   = [kde(x[i], npoints=256) for i in 1:n_x]
+    dens   = [kde(x[i], npoints=256, boundary=(minimum(x[i])-0.2, maximum(x[i])+0.2)) for i in 1:n_x]
+    #dens   = [kde(x[i], npoints=256) for i in 1:n_x]
     f_min  = minimum([minimum(dens[i].x) for i in 1:n_x])
     f_max  = maximum([maximum(dens[i].x) for i in 1:n_x])
     x_step = (maximum(dens[1].x) - minimum(dens[1].x)) / length(dens[1].x)
@@ -142,12 +151,6 @@ writedlm(joinpath(folder_name, "hist.csv"),  hcat([dens[i] for i in 1:length(den
 
 
 ### Print Latex tables
-caption  = "Correlations between models and metrics"
-label    = "table:corrs"
-
-table_to_tex(corrs_mean, "%1.1p"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
-
-
 caption  = "Default hyperparameters"
 label    = "table:pars"
 
@@ -159,3 +162,16 @@ w_s_min   = 0.1
 w_s_max   = 1.5
 data_notation = [d, m, δ, pars.x_min[1], pars.x_max[1], pars.h_min, pars.h_max, pars.w_min, pars.w_max, s_min, s_max, h_s_min, h_s_max, w_s_min, w_s_max]
 table_to_tex(data_notation, "%1.1f"; header_l=header_notation, caption=caption, label=label, alignment=alignment_lr(ones(1)))
+
+
+caption  = "Correlations between models and metrics"
+label    = "table:corrs"
+
+table_to_tex(corrs_mean, "%1.1p"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
+
+
+caption  = "Probability of selecting the peak with the highest metric"
+label    = "table:success"
+
+table_to_tex(success_mean, "%1.1p"; header_l=header_methods, header_t=header_metrics, caption=caption, label=label, alignment=alignment_lr(header_metrics))
+
